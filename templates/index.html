@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Classification System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Email Classification System</h1>
+            <p>Classify incoming emails into Important, Promotion, Spam, or General to stay on top of your inbox.</p>
+        </header>
+        <main>
+            <form id="classification-form">
+                <label for="message">Email Content</label>
+                <textarea id="message" name="message" rows="8" placeholder="Paste the email text here..."></textarea>
+                <button type="submit">Classify Email</button>
+            </form>
+            <section id="result" class="hidden">
+                <h2>Prediction</h2>
+                <p id="prediction-label"></p>
+            </section>
+        </main>
+    </div>
+    <script>
+        const form = document.getElementById('classification-form');
+        const resultSection = document.getElementById('result');
+        const predictionLabel = document.getElementById('prediction-label');
+
+        const colorMap = {
+            'Spam': 'result-spam',
+            'Promotion': 'result-promotion',
+            'Important': 'result-important',
+            'General': 'result-general'
+        };
+
+        form.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const message = document.getElementById('message').value;
+
+            const response = await fetch('/predict', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ message })
+            });
+
+            const data = await response.json();
+            if (data.error) {
+                predictionLabel.textContent = data.error;
+                predictionLabel.className = 'result-error';
+            } else {
+                predictionLabel.innerHTML = `This email is categorized as: <span class="prediction-highlight">${data.label}</span>`;
+                predictionLabel.className = colorMap[data.label] || 'result-general';
+            }
+            resultSection.classList.remove('hidden');
+        });
+    </script>
+</body>
+</html>
